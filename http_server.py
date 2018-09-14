@@ -104,8 +104,8 @@ def response_path(path):
         return content, mime_type
 
     # Construct path within the home directory, webroot
-    #local_path = os.path.join('webroot', path)
-    local_path = 'webroot' + path
+    local_path = os.path.join(os.cwd(),'webroot', path.strip('/'))
+    #local_path = 'webroot' + path
     print("The local path is:{}".format(local_path))
 
     # Check if path is a file and if so display contents, if not raise 404
@@ -115,11 +115,11 @@ def response_path(path):
         print(mime_type)
         mime_type = mime_type.encode('utf8')
         content = ""
-        with open(local_path, 'r') as file:
+        with open(local_path, 'br') as file:
             for line in file:
                 content += line
                 print(content)
-        content = content.encode('utf8')
+        #content = content.encode('utf8')
     else:
         print("Local path is a file that does not exist")
         response_not_found()
