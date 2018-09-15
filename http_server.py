@@ -98,7 +98,8 @@ def response_path(path):
     print("The local path is:{}".format(local_path))
 
     # Check if path is a directory and if so list contents
-    if path[-1]=='/':
+    #if path[-1]=='/':
+    if os.path.isdir(local_path):
         print("Local path is a directory")
         mime_type = b"text/plain"
         content = "\n".join(os.listdir(local_path)).encode('utf8')
@@ -123,18 +124,18 @@ def response_path(path):
 
 def server(log_buffer=sys.stderr):
     address = ('127.0.0.1', 10000)
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    print("making a server on {0}:{1}".format(*address), file=log_buffer)
-    sock.bind(address)
-    sock.listen(1)
 
     try:
         while True:
-            print('waiting for a connection', file=log_buffer)
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            print("making a server on {0}:{1}".format(*address))  # , file=log_buffer
+            sock.bind(address)
+            sock.listen(1)
+            print('waiting for a connection') #, file=log_buffer
             conn, addr = sock.accept()  # blocking
             try:
-                print('connection - {0}:{1}'.format(*addr), file=log_buffer)
+                print('connection - {0}:{1}'.format(*addr)) # , file=log_buffer
 
                 request = ''
                 while True:
@@ -174,6 +175,7 @@ def server(log_buffer=sys.stderr):
         sock.close()
         return
     except:
+        print("Caught another exception")
         traceback.print_exc()
 
 
