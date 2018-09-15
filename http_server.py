@@ -34,7 +34,7 @@ def response_method_not_allowed():
     return b"\r\n".join([
         b"HTTP/1.1 405 Method Not Allowed",
         b"",
-        b"Go away, or I shall taunt you a second time!"
+        b"405 Method Not Allowed \r\n\r\nGo away, or I shall taunt you a second time!"
     ])
 
 
@@ -44,7 +44,7 @@ def response_not_found():
     return b"\r\n".join([
         b"HTTP/1.1 404 Response not found",
         b"",
-        b"Bring me another shrubbery!"
+        b"404 Response Not Found \r\n\r\nBring me another shrubbery!"
     ])
 
 
@@ -66,7 +66,6 @@ def parse_request(request):
 def response_path(path):
     import os, mimetypes
     """
-    TODO:implement this!
     This method should return appropriate content  (body) and a mime type
     based on a path.
 
@@ -94,19 +93,16 @@ def response_path(path):
 
     """
 
+    # Construct path within the home directory, webroot
+    local_path = os.path.join(os.getcwd(),'webroot', path.strip('/'))
+    print("The local path is:{}".format(local_path))
+
     # Check if path is a directory and if so list contents
     if path[-1]=='/':
         print("Local path is a directory")
-        local_path = '.' + path
-        print(local_path)
         mime_type = b"text/plain"
-        content = b"{}".join(os.listdir(local_path))
+        content = "\n".join(os.listdir(local_path)).encode('utf8')
         return content, mime_type
-
-    # Construct path within the home directory, webroot
-    local_path = os.path.join(os.cwd(),'webroot', path.strip('/'))
-    #local_path = 'webroot' + path
-    print("The local path is:{}".format(local_path))
 
     # Check if path is a file and if so display contents, if not raise 404
     if os.path.exists(local_path):
@@ -114,26 +110,15 @@ def response_path(path):
         mime_type = mimetypes.guess_type(local_path)[0]
         print(mime_type)
         mime_type = mime_type.encode('utf8')
-        content = ""
-        with open(local_path, 'br') as file:
-            for line in file:
-                content += line
-                print(content)
-        #content = content.encode('utf8')
+        #content = ""
+        with open(local_path, 'br') as f:
+            content = f.read()
+            print(content)
+        return content, mime_type  # both binary
     else:
         print("Local path is a file that does not exist")
-        response_not_found()
-        #raise(NameError)
+        raise(NameError)
 
-    #  Fill in the appropriate content and mime_type given the path.
-    # See the assignment guidelines for help on "mapping mime-types", though
-    # you might need to create a special case for handling make_time.py
-    #
-    # If the path is "make_time.py", then you may OPTIONALLY return the
-    # result of executing `make_time.py`. But you need only return the
-    # CONTENTS of `make_time.py`.
-
-    return content, mime_type # both binary
 
 
 def server(log_buffer=sys.stderr):
@@ -165,29 +150,25 @@ def server(log_buffer=sys.stderr):
                 try:
                     # Use parse_request to retrieve the path from the request.
                     path = parse_request(request)
-
-                    # TODO: Use response_path to retrieve the content and the mimetype,
-                    # based on the request path.
                     content, mime_type = response_path(path)
-                    response = response_ok(body=content, mimetype=mime_type)
 
-                    # If parse_request raised a NotImplementedError, then let
-                    # response be a method_not_allowed response. If response_path raised
-                    # a NameError, then let response be a not_found response. Else,
-                    # use the content and mimetype from response_path to build a
-                    # response_ok.
-                    #response = response_ok(
-                    #    body=b"Welcome to my web server",
-                    #    mimetype=b"text/plain"
-                    #)
+                except NameError:
+                    # If response_path raised
+                    # a NameError, then let response be a not_found response.
+                    response = response_not_found()
                 except NotImplementedError:
+                    # If parse_request raised a NotImplementedError, then let
+                    # response be a method_not_allowed response.
                     response = response_method_not_allowed()
-
-                conn.sendall(response)
+                else:
+                    # Else, use the content and mimetype from response_path to build a
+                    # response_ok.
+                    response = response_ok(body=content, mimetype=mime_type)
             except:
                 traceback.print_exc()
             finally:
-                conn.close() 
+                conn.sendall(response)
+                conn.close()
 
     except KeyboardInterrupt:
         sock.close()
