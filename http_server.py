@@ -103,10 +103,9 @@ def response_path(path):
         print("Local path is a directory")
         mime_type = b"text/plain"
         content = "\n".join(os.listdir(local_path)).encode('utf8')
-        return content, mime_type
 
     # Check if path is a file and if so display contents, if not raise 404
-    if os.path.exists(local_path):
+    elif os.path.exists(local_path):
         print("Local path is a file that exists")
         mime_type = mimetypes.guess_type(local_path)[0]
         print(mime_type)
@@ -115,10 +114,11 @@ def response_path(path):
         with open(local_path, 'br') as f:
             content = f.read()
             print(content)
-        return content, mime_type  # both binary
     else:
         print("Local path is a file that does not exist")
         raise(NameError)
+	
+    return content, mime_type
 
 
 
