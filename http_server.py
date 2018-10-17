@@ -92,18 +92,18 @@ def response_path(path):
     if os.path.isdir(file_path):
         content = "\n".join(os.listdir(file_path)).encode('utf8')
         mime_type = b"text/plain"
-        return content, mime_type
-
+        
     # If the path indicates a file:
     elif os.path.exists(file_path):
         mime_type = mimetypes.guess_type(file_path)[0].encode('utf8')
         with open(file_path, "br") as f:
             content = f.read()
-        return content, mime_type
-
+            
     # If the path does not indicate an existing directory or file:
     else:
         raise NameError
+        
+    return content, mime_type
 
 
 def server(log_buffer=sys.stderr):
